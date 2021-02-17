@@ -56,8 +56,8 @@
     return [self dataForKey:key promptMessage:nil];
 }
 
-- (NSString *)stringForKey:(NSString *)key promptMessage:(NSString *)message {
-    NSData *data = [self dataForKey:key promptMessage:message];
+- (NSString *)stringForKey:(NSString *)key promptMessage:(NSString *)message error:(NSError**)err {
+    NSData *data = [self dataForKey:key promptMessage:message error:err];
     NSString *string = nil;
     if (data) {
         string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
@@ -70,17 +70,20 @@
 }
 
 - (NSData *)dataForKey:(NSString *)key promptMessage:(NSString *)message error:(NSError**)err {
+    
     if (!key) {
         return nil;
     }
 
     NSDictionary *query = [self queryFetchOneByKey:key message:message];
     CFTypeRef data = nil;
+    
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &data);
+
     if (status != errSecSuccess) {
-        if(err != nil) {
-            *err = [NSError errorWithDomain:A0ErrorDomain code:status userInfo:@{NSLocalizedDescriptionKey : [self stringForSecStatus:status]}];
-        }
+        
+        *err = [NSError errorWithDomain:A0ErrorDomain code:status userInfo:@{NSLocalizedDescriptionKey : [self stringForSecStatus:status]}];
+        
         return nil;
     }
 
